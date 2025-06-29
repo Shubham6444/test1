@@ -1,0 +1,27 @@
+{
+    "name": "vm-provisioning-platform",
+    "version": "1.0.0",
+    "description": "Docker-based VM provisioning platform",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js"
+    },
+    "dependencies": {
+        "bcrypt": "^6.0.0",
+        "body-parser": "^1.20.2",
+        "cors": "^2.8.5",
+        "dockerode": "^4.0.2",
+        "dotenv": "^17.0.0",
+        "express": "^4.21.2",
+        "express-session": "^1.17.3",
+        "fs-extra": "^11.2.0",
+        "mongodb": "^6.3.0",
+        "mongoose": "^8.16.1",
+        "multer": "^2.0.1",
+        "uuid": "^9.0.1"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2"
+    }
+}

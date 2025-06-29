@@ -1,0 +1,1133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel - VM Provisioning Platform</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .admin-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .admin-header {
+            background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 10px 20px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn.active {
+            background: #007bff;
+        }
+
+        .nav-btn:hover {
+            background: #5a6268;
+        }
+
+        .nav-btn.active:hover {
+            background: #0056b3;
+        }
+
+        .admin-section {
+            display: none;
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .admin-section.active {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .data-table th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            color: #495057;
+        }
+
+        .data-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .status-running {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-stopped {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-error {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+
+        .action-btn {
+            padding: 4px 8px;
+            font-size: 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-start {
+            background: #28a745;
+            color: white;
+        }
+
+        .btn-stop {
+            background: #ffc107;
+            color: #212529;
+        }
+
+        .btn-restart {
+            background: #17a2b8;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-logs {
+            background: #6c757d;
+            color: white;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal.show {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .logs-container {
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 15px;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .search-box {
+            width: 100%;
+            max-width: 300px;
+            padding: 10px;
+            border: 1px solid #ced4da;
+            border-radius: 6px;
+            margin-bottom: 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 100px auto;
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #dc3545;
+        }
+
+        @media (max-width: 768px) {
+            .admin-container {
+                padding: 10px;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            }
+
+            .data-table {
+                font-size: 12px;
+            }
+
+            .action-buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="admin-container">
+        <!-- Login Form -->
+        <div id="admin-login" class="login-form">
+            <h2>🔐 Admin Login</h2>
+            <form id="adminLoginForm">
+                <div class="form-group">
+                    <label for="adminUsername">Username</label>
+                    <input type="text" id="adminUsername" name="username" required>
+                </div>
+                <div class="form-group">
+                    <label for="adminPassword">Password</label>
+                    <input type="password" id="adminPassword" name="password" required>
+                </div>
+                <button type="submit" class="btn btn-primary">Login</button>
+            </form>
+        </div>
+
+        <!-- Admin Panel -->
+        <div id="admin-panel" style="display: none;">
+            <!-- Header -->
+            <div class="admin-header">
+                <div>
+                    <h1>🛠️ Admin Panel</h1>
+                    <p>VM Provisioning Platform Management</p>
+                </div>
+                <div>
+                    <span id="admin-username">Admin</span>
+                    <button id="admin-logout" class="btn btn-secondary">Logout</button>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <div class="admin-nav">
+                <button class="nav-btn active" data-section="dashboard">Dashboard</button>
+                <button class="nav-btn" data-section="users">Users</button>
+                <button class="nav-btn" data-section="vms">VMs</button>
+                <button class="nav-btn" data-section="system">System</button>
+                <button class="nav-btn" data-section="logs">Logs</button>
+            </div>
+
+            <!-- Dashboard Section -->
+            <div id="dashboard" class="admin-section active">
+                <h2>📊 Dashboard</h2>
+                <div class="stats-grid" id="stats-grid">
+                    <div class="loading">Loading statistics...</div>
+                </div>
+                
+                <div style="display: flex; gap: 20px; margin-top: 30px; flex-wrap: wrap;">
+                    <button id="refresh-stats" class="btn btn-primary">Refresh Stats</button>
+                    <button id="cleanup-system" class="btn btn-warning">Cleanup System</button>
+                </div>
+            </div>
+
+            <!-- Users Section -->
+            <div id="users" class="admin-section">
+                <h2>👥 Users Management</h2>
+                <input type="text" id="user-search" class="search-box" placeholder="Search users...">
+                <div id="users-container">
+                    <div class="loading">Loading users...</div>
+                </div>
+            </div>
+
+            <!-- VMs Section -->
+            <div id="vms" class="admin-section">
+                <h2>🖥️ VMs Management</h2>
+                <input type="text" id="vm-search" class="search-box" placeholder="Search VMs...">
+                <div id="vms-container">
+                    <div class="loading">Loading VMs...</div>
+                </div>
+            </div>
+
+            <!-- System Section -->
+            <div id="system" class="admin-section">
+                <h2>⚙️ System Information</h2>
+                <div id="system-info">
+                    <div class="loading">Loading system information...</div>
+                </div>
+            </div>
+
+            <!-- Logs Section -->
+            <div id="logs" class="admin-section">
+                <h2>📋 System Logs</h2>
+                <div style="margin-bottom: 20px;">
+                    <button id="refresh-logs" class="btn btn-primary">Refresh Logs</button>
+                    <select id="log-lines" class="form-control" style="width: auto; display: inline-block; margin-left: 10px;">
+                        <option value="50">50 lines</option>
+                        <option value="100">100 lines</option>
+                        <option value="200">200 lines</option>
+                    </select>
+                </div>
+                <div id="logs-container">
+                    <div class="loading">Loading logs...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <!-- Password Change Modal -->
+        <div id="password-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Change VM Password</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="password-form">
+                        <input type="hidden" id="password-user-id">
+                        <div class="form-group">
+                            <label for="new-password">New Password</label>
+                            <input type="password" id="new-password" required minlength="6">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Change Password</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Logs Modal -->
+        <div id="logs-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>VM Logs</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div id="vm-logs" class="logs-container">Loading logs...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Command Execution Modal -->
+        <div id="exec-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Execute Command</h3>
+                    <button class="modal-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <form id="exec-form">
+                        <input type="hidden" id="exec-user-id">
+                        <div class="form-group">
+                            <label for="exec-command">Command</label>
+                            <input type="text" id="exec-command" placeholder="e.g., ps aux, ls -la, whoami" required>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Execute</button>
+                    </form>
+                    <div id="exec-output" class="logs-container" style="margin-top: 20px; display: none;"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Toast Notifications -->
+        <div id="toast" class="toast">
+            <span id="toast-message"></span>
+            <button id="toast-close">&times;</button>
+        </div>
+    </div>
+
+    <script>class AdminPanel {
+  constructor() {
+    this.isLoggedIn = false
+    this.users = []
+    this.vms = {}
+    this.stats = {}
+
+    this.initializeElements()
+    this.attachEventListeners()
+    this.checkAuthStatus()
+  }
+
+  initializeElements() {
+    // Login elements
+    this.loginForm = document.getElementById("adminLoginForm")
+    this.loginSection = document.getElementById("admin-login")
+    this.panelSection = document.getElementById("admin-panel")
+
+    // Navigation
+    this.navButtons = document.querySelectorAll(".nav-btn")
+    this.sections = document.querySelectorAll(".admin-section")
+
+    // Dashboard elements
+    this.statsGrid = document.getElementById("stats-grid")
+    this.refreshStatsBtn = document.getElementById("refresh-stats")
+    this.cleanupBtn = document.getElementById("cleanup-system")
+
+    // Users elements
+    this.usersContainer = document.getElementById("users-container")
+    this.userSearch = document.getElementById("user-search")
+
+    // VMs elements
+    this.vmsContainer = document.getElementById("vms-container")
+    this.vmSearch = document.getElementById("vm-search")
+
+    // System elements
+    this.systemInfo = document.getElementById("system-info")
+
+    // Logs elements
+    this.logsContainer = document.getElementById("logs-container")
+    this.refreshLogsBtn = document.getElementById("refresh-logs")
+    this.logLines = document.getElementById("log-lines")
+
+    // Modals
+    this.passwordModal = document.getElementById("password-modal")
+    this.logsModal = document.getElementById("logs-modal")
+    this.execModal = document.getElementById("exec-modal")
+
+    // Forms
+    this.passwordForm = document.getElementById("password-form")
+    this.execForm = document.getElementById("exec-form")
+
+    // Other elements
+    this.logoutBtn = document.getElementById("admin-logout")
+    this.toast = document.getElementById("toast")
+    this.toastMessage = document.getElementById("toast-message")
+    this.toastClose = document.getElementById("toast-close")
+  }
+
+  attachEventListeners() {
+    // Login
+    this.loginForm.addEventListener("submit", (e) => this.handleLogin(e))
+
+    // Logout
+    this.logoutBtn.addEventListener("click", () => this.handleLogout())
+
+    // Navigation
+    this.navButtons.forEach((btn) => {
+      btn.addEventListener("click", () => this.switchSection(btn.dataset.section))
+    })
+
+    // Dashboard
+    this.refreshStatsBtn.addEventListener("click", () => this.loadStats())
+    this.cleanupBtn.addEventListener("click", () => this.cleanupSystem())
+
+    // Search
+    this.userSearch.addEventListener("input", (e) => this.filterUsers(e.target.value))
+    this.vmSearch.addEventListener("input", (e) => this.filterVMs(e.target.value))
+
+    // Logs
+    this.refreshLogsBtn.addEventListener("click", () => this.loadSystemLogs())
+
+    // Forms
+    this.passwordForm.addEventListener("submit", (e) => this.handlePasswordChange(e))
+    this.execForm.addEventListener("submit", (e) => this.handleCommandExecution(e))
+
+    // Modal close
+    document.querySelectorAll(".modal-close").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.target.closest(".modal").classList.remove("show")
+      })
+    })
+
+    // Toast close
+    this.toastClose.addEventListener("click", () => this.hideToast())
+
+    // Modal backdrop close
+    document.querySelectorAll(".modal").forEach((modal) => {
+      modal.addEventListener("click", (e) => {
+        if (e.target === modal) {
+          modal.classList.remove("show")
+        }
+      })
+    })
+  }
+
+  async checkAuthStatus() {
+    // Check if admin is already logged in (you might want to implement this)
+    // For now, always show login form
+  }
+
+  async handleLogin(e) {
+    e.preventDefault()
+
+    const formData = new FormData(this.loginForm)
+    const data = {
+      username: formData.get("username"),
+      password: formData.get("password"),
+    }
+
+    try {
+      const response = await fetch("/admin/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        this.isLoggedIn = true
+        this.loginSection.style.display = "none"
+        this.panelSection.style.display = "block"
+        this.showToast("Login successful!", "success")
+        this.loadInitialData()
+      } else {
+        this.showToast(result.error || "Login failed", "error")
+      }
+    } catch (error) {
+      console.error("Login error:", error)
+      this.showToast("Network error. Please try again.", "error")
+    }
+  }
+
+  async handleLogout() {
+    try {
+      const response = await fetch("/admin/logout", {
+        method: "POST",
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        this.isLoggedIn = false
+        this.panelSection.style.display = "none"
+        this.loginSection.style.display = "block"
+        this.loginForm.reset()
+        this.showToast("Logged out successfully", "success")
+      }
+    } catch (error) {
+      console.error("Logout error:", error)
+      this.showToast("Logout failed", "error")
+    }
+  }
+
+  switchSection(sectionName) {
+    // Update navigation
+    this.navButtons.forEach((btn) => btn.classList.remove("active"))
+    document.querySelector(`[data-section="${sectionName}"]`).classList.add("active")
+
+    // Update sections
+    this.sections.forEach((section) => section.classList.remove("active"))
+    document.getElementById(sectionName).classList.add("active")
+
+    // Load section data
+    switch (sectionName) {
+      case "dashboard":
+        this.loadStats()
+        break
+      case "users":
+        this.loadUsers()
+        break
+      case "vms":
+        this.loadVMs()
+        break
+      case "system":
+        this.loadSystemInfo()
+        break
+      case "logs":
+        this.loadSystemLogs()
+        break
+    }
+  }
+
+  async loadInitialData() {
+    await this.loadStats()
+    await this.loadUsers()
+    await this.loadVMs()
+  }
+
+  async loadStats() {
+    try {
+      const response = await fetch("/admin/stats")
+      const result = await response.json()
+
+      if (result.success) {
+        this.stats = result.stats
+        this.renderStats()
+      } else {
+        this.showToast("Failed to load statistics", "error")
+      }
+    } catch (error) {
+      console.error("Stats loading error:", error)
+      this.showToast("Failed to load statistics", "error")
+    }
+  }
+
+  renderStats() {
+    const stats = this.stats
+    this.statsGrid.innerHTML = `
+      <div class="stat-card">
+        <div class="stat-number">${stats.users}</div>
+        <div class="stat-label">Total Users</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">${stats.totalVMs}</div>
+        <div class="stat-label">Total VMs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">${stats.runningVMs}</div>
+        <div class="stat-label">Running VMs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">${stats.stoppedVMs}</div>
+        <div class="stat-label">Stopped VMs</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">${stats.usedSSHPorts}</div>
+        <div class="stat-label">Used SSH Ports</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number">${stats.usedHTTPPorts}</div>
+        <div class="stat-label">Used HTTP Ports</div>
+      </div>
+    `
+  }
+
+  async loadUsers() {
+    try {
+      const response = await fetch("/admin/users")
+      const result = await response.json()
+
+      if (result.success) {
+        this.users = result.users
+        this.renderUsers()
+      } else {
+        this.showToast("Failed to load users", "error")
+      }
+    } catch (error) {
+      console.error("Users loading error:", error)
+      this.showToast("Failed to load users", "error")
+    }
+  }
+
+  renderUsers(filteredUsers = null) {
+    const users = filteredUsers || this.users
+
+    if (users.length === 0) {
+      this.usersContainer.innerHTML = '<div class="loading">No users found</div>'
+      return
+    }
+
+    const tableHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${users
+            .map(
+              (user) => `
+            <tr>
+              <td>${user.username}</td>
+              <td>${user.email}</td>
+              <td>${new Date(user.createdAt).toLocaleDateString()}</td>
+              <td>
+                <div class="action-buttons">
+                  <button class="action-btn btn-delete" onclick="adminPanel.deleteUser('${user._id}', '${user.username}')">
+                    Delete
+                  </button>
+                </div>
+              </td>
+            </tr>
+          `,
+            )
+            .join("")}
+        </tbody>
+      </table>
+    `
+
+    this.usersContainer.innerHTML = tableHTML
+  }
+
+  async loadVMs() {
+    try {
+      const response = await fetch("/admin/vms")
+      const result = await response.json()
+
+      if (result.success) {
+        this.vms = result.vms
+        this.renderVMs()
+      } else {
+        this.showToast("Failed to load VMs", "error")
+      }
+    } catch (error) {
+      console.error("VMs loading error:", error)
+      this.showToast("Failed to load VMs", "error")
+    }
+  }
+
+  renderVMs(filteredVMs = null) {
+    const vms = filteredVMs || this.vms
+    const vmArray = Object.entries(vms)
+
+    if (vmArray.length === 0) {
+      this.vmsContainer.innerHTML = '<div class="loading">No VMs found</div>'
+      return
+    }
+
+    const tableHTML = `
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>User ID</th>
+            <th>Subdomain</th>
+            <th>SSH Port</th>
+            <th>HTTP Port</th>
+            <th>Status</th>
+            <th>Created</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${vmArray
+            .map(
+              ([userId, vm]) => `
+            <tr>
+              <td>${userId.substring(0, 8)}...</td>
+              <td>${vm.subdomain}</td>
+              <td>${vm.sshPort}</td>
+              <td>${vm.httpPort}</td>
+              <td><span class="status-badge status-${vm.status}">${vm.status}</span></td>
+              <td>${new Date(vm.createdAt).toLocaleDateString()}</td>
+              <td>
+                <div class="action-buttons">
+                  ${
+                    vm.status === "running"
+                      ? `<button class="action-btn btn-stop" onclick="adminPanel.vmAction('${userId}', 'stop')">Stop</button>`
+                      : `<button class="action-btn btn-start" onclick="adminPanel.vmAction('${userId}', 'start')">Start</button>`
+                  }
+                  <button class="action-btn btn-restart" onclick="adminPanel.vmAction('${userId}', 'restart')">Restart</button>
+                  <button class="action-btn btn-logs" onclick="adminPanel.showVMLogs('${userId}')">Logs</button>
+                  <button class="action-btn" onclick="adminPanel.showPasswordModal('${userId}')">Password</button>
+                  <button class="action-btn" onclick="adminPanel.showExecModal('${userId}')">Exec</button>
+                  <button class="action-btn btn-delete" onclick="adminPanel.vmAction('${userId}', 'delete')">Delete</button>
+                </div>
+              </td>
+            </tr>
+          `,
+            )
+            .join("")}
+        </tbody>
+      </table>
+    `
+
+    this.vmsContainer.innerHTML = tableHTML
+  }
+
+  async loadSystemInfo() {
+    try {
+      const response = await fetch("/admin/stats")
+      const result = await response.json()
+
+      if (result.success) {
+        const systemInfo = result.stats.systemInfo
+        this.systemInfo.innerHTML = `
+          <div class="stats-grid">
+            <div class="stat-card">
+              <div class="stat-number">${systemInfo.containers}</div>
+              <div class="stat-label">Total Containers</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">${systemInfo.images}</div>
+              <div class="stat-label">Docker Images</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">${Math.round(systemInfo.memTotal / 1024 / 1024 / 1024)}GB</div>
+              <div class="stat-label">Total Memory</div>
+            </div>
+            <div class="stat-card">
+              <div class="stat-number">${systemInfo.cpus}</div>
+              <div class="stat-label">CPU Cores</div>
+            </div>
+          </div>
+        `
+      }
+    } catch (error) {
+      console.error("System info loading error:", error)
+      this.showToast("Failed to load system information", "error")
+    }
+  }
+
+  async loadSystemLogs() {
+    try {
+      const lines = this.logLines.value
+      const response = await fetch(`/admin/system-logs?lines=${lines}`)
+      const result = await response.json()
+
+      if (result.success) {
+        const logsHTML = Object.entries(result.logs)
+          .map(
+            ([command, output]) => `
+          <div style="margin-bottom: 30px;">
+            <h4 style="color: #00ff00; margin-bottom: 10px;">${command}</h4>
+            <div class="logs-container">${output}</div>
+          </div>
+        `,
+          )
+          .join("")
+
+        this.logsContainer.innerHTML = logsHTML
+      } else {
+        this.showToast("Failed to load system logs", "error")
+      }
+    } catch (error) {
+      console.error("System logs loading error:", error)
+      this.showToast("Failed to load system logs", "error")
+    }
+  }
+
+  async vmAction(userId, action) {
+    if (action === "delete" && !confirm("Are you sure you want to delete this VM?")) {
+      return
+    }
+
+    try {
+      const response = await fetch("/admin/vm-action", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, action }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        this.showToast(`VM ${action} completed successfully`, "success")
+        this.loadVMs() // Refresh VM list
+        this.loadStats() // Refresh stats
+      } else {
+        this.showToast(result.error || `Failed to ${action} VM`, "error")
+      }
+    } catch (error) {
+      console.error("VM action error:", error)
+      this.showToast("Network error. Please try again.", "error")
+    }
+  }
+
+  async deleteUser(userId, username) {
+    if (!confirm(`Are you sure you want to delete user "${username}" and their VM?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/admin/user/${userId}`, {
+        method: "DELETE",
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        this.showToast("User deleted successfully", "success")
+        this.loadUsers() // Refresh users list
+        this.loadVMs() // Refresh VMs list
+        this.loadStats() // Refresh stats
+      } else {
+        this.showToast(result.error || "Failed to delete user", "error")
+      }
+    } catch (error) {
+      console.error("User deletion error:", error)
+      this.showToast("Network error. Please try again.", "error")
+    }
+  }
+
+  showPasswordModal(userId) {
+    document.getElementById("password-user-id").value = userId
+    this.passwordModal.classList.add("show")
+  }
+
+  async handlePasswordChange(e) {
+    e.preventDefault()
+
+    const userId = document.getElementById("password-user-id").value
+    const newPassword = document.getElementById("new-password").value
+
+    try {
+      const response = await fetch("/admin/change-vm-password", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, newPassword }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        this.showToast("VM password changed successfully", "success")
+        this.passwordModal.classList.remove("show")
+        this.passwordForm.reset()
+      } else {
+        this.showToast(result.error || "Failed to change password", "error")
+      }
+    } catch (error) {
+      console.error("Password change error:", error)
+      this.showToast("Network error. Please try again.", "error")
+    }
+  }
+
+  async showVMLogs(userId) {
+    try {
+      const response = await fetch(`/admin/vm-logs/${userId}`)
+      const result = await response.json()
+
+      if (result.success) {
+        document.getElementById("vm-logs").textContent = result.logs
+        this.logsModal.classList.add("show")
+      } else {
+        this.showToast(result.error || "Failed to load VM logs", "error")
+      }
+    } catch (error) {
+      console.error("VM logs error:", error)
+      this.showToast("Failed to load VM logs", "error")
+    }
+  }
+
+  showExecModal(userId) {
+    document.getElementById("exec-user-id").value = userId
+    this.execModal.classList.add("show")
+  }
+
+  async handleCommandExecution(e) {
+    e.preventDefault()
+
+    const userId = document.getElementById("exec-user-id").value
+    const command = document.getElementById("exec-command").value
+
+    try {
+      const response = await fetch("/admin/vm-exec", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ userId, command }),
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        const outputDiv = document.getElementById("exec-output")
+        outputDiv.textContent = result.output
+        outputDiv.style.display = "block"
+      } else {
+        this.showToast(result.error || "Failed to execute command", "error")
+      }
+    } catch (error) {
+      console.error("Command execution error:", error)
+      this.showToast("Failed to execute command", "error")
+    }
+  }
+
+  async cleanupSystem() {
+    if (!confirm("Are you sure you want to cleanup orphaned containers?")) {
+      return
+    }
+
+    try {
+      const response = await fetch("/admin/cleanup", {
+        method: "POST",
+      })
+
+      const result = await response.json()
+
+      if (result.success) {
+        this.showToast(result.message, "success")
+        this.loadStats() // Refresh stats
+        this.loadVMs() // Refresh VMs
+      } else {
+        this.showToast(result.error || "Cleanup failed", "error")
+      }
+    } catch (error) {
+      console.error("Cleanup error:", error)
+      this.showToast("Cleanup failed", "error")
+    }
+  }
+
+  filterUsers(searchTerm) {
+    if (!searchTerm) {
+      this.renderUsers()
+      return
+    }
+
+    const filtered = this.users.filter(
+      (user) =>
+        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+
+    this.renderUsers(filtered)
+  }
+
+  filterVMs(searchTerm) {
+    if (!searchTerm) {
+      this.renderVMs()
+      return
+    }
+
+    const filtered = {}
+    Object.entries(this.vms).forEach(([userId, vm]) => {
+      if (
+        userId.includes(searchTerm) ||
+        vm.subdomain.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        vm.status.toLowerCase().includes(searchTerm.toLowerCase())
+      ) {
+        filtered[userId] = vm
+      }
+    })
+
+    this.renderVMs(filtered)
+  }
+
+  showToast(message, type = "info") {
+    this.toastMessage.textContent = message
+    this.toast.className = `toast ${type} show`
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      this.hideToast()
+    }, 5000)
+  }
+
+  hideToast() {
+    this.toast.classList.remove("show")
+  }
+}
+
+// Initialize admin panel when DOM is loaded
+document.addEventListener("DOMContentLoaded", () => {
+  window.adminPanel = new AdminPanel()
+})
+</script>
+</body>
+</html>
